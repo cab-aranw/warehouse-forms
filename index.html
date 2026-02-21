@@ -700,7 +700,7 @@
     console.log('EXPENSE PAYLOAD:', JSON.stringify(payload, null, 2));
 
     // When n8n is ready, replace console.log with:
-    fetch('https://huerequeque.app.n8n.cloud/webhook-test/expense-entry', {
+    fetch('https://huerequeque.app.n8n.cloud/webhook/expense-entry', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
