@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Warehouse Management / Gestión de Almacén</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #f5a623;
+    --accent2: #4f8ef7;
+    --success: #2ecc71;
+    --danger: #e74c3c;
+    --text: #eef0f8;
+    --muted: #7a7f9a;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  /* ── HEADER ── */
+  .app-header {
+    background: linear-gradient(135deg, #1a1d27 0%, #0f1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 20px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .app-title {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .app-name {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .app-name span {
+    color: var(--accent);
+  }
+
+  /* ── TAB NAV ── */
+  .tab-nav {
+    display: flex;
+    gap: 4px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 12px 8px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--muted);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-btn .sub {
+    display: block;
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-top: 2px;
+  }
+
+  /* ── PANELS ── */
+  .panel { display: none; padding: 20px; }
+  .panel.active { display: block; }
+
+  /* ── SECTION LABEL ── */
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .section-tag .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* ── FORM CARD ── */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .form-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .form-card-sub {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 20px;
+  }
+
+  /* ── FIELD ── */
+  .field {
+    margin-bottom: 16px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+  }
+
+  .field label .en { color: var(--text); }
+  .field label .es { color: var(--muted); font-size: 11px; font-weight: 400; }
+
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px; /* prevents iOS zoom */
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(245,166,35,0.12);
+  }
+
+  .field textarea {
+    resize: none;
+    height: 90px;
+  }
+
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237a7f9a' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 44px;
+  }
+
+  /* ── AMOUNT INPUT ── */
+  .amount-wrap {
+    position: relative;
+  }
+
+  .amount-wrap .currency {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    pointer-events: none;
+  }
+
+  .amount-wrap input {
+    padding-left: 36px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* ── TOGGLE PILLS (Category) ── */
+  .pill-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    padding: 10px 16px;
+    border-radius: 30px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+
+  .pill.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0f1117;
+  }
+
+  .pill.selected.blue {
+    background: var(--accent2);
+    border-color: var(--accent2);
+  }
+
+  .pill.selected.green {
+    background: var(--success);
+    border-color: var(--success);
+  }
+
+  /* ── SUBCATEGORY GRID ── */
+  .subcat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .subcat-btn {
+    padding: 12px 10px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s;
+    text-align: center;
+  }
+
+  .subcat-btn.selected {
+    border-color: var(--accent2);
+    background: rgba(79,142,247,0.15);
+    color: var(--accent2);
+  }
+
+  /* ── SPACE GRID ── */
+  .space-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .space-btn {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .space-btn.selected {
+    border-color: var(--success);
+    background: rgba(46,204,113,0.15);
+    color: var(--success);
+    font-weight: 700;
+  }
+
+  /* ── PAID TOGGLE ── */
+  .paid-toggle {
+    display: flex;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .paid-opt {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    text-align: center;
+  }
+
+  .paid-opt.yes.active { background: rgba(46,204,113,0.2); color: var(--success); }
+  .paid-opt.no.active  { background: rgba(231,76,60,0.2); color: var(--danger); }
+
+  /* ── SUBMIT BUTTON ── */
+  .submit-btn {
+    width: 100%;
+    padding: 18px;
+    border-radius: 14px;
+    border: none;
+    background: var(--accent);
+    color: #0f1117;
+    font-family: 'Outfit', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: all 0.2s;
+    margin-top: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .submit-btn:active { transform: scale(0.98); opacity: 0.9; }
+
+  .submit-btn .sub-line {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.7;
+    margin-top: 2px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── SUCCESS TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--success);
+    color: #fff;
+    padding: 14px 24px;
+    border-radius: 40px;
+    font-weight: 700;
+    font-size: 14px;
+    z-index: 999;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+    box-shadow: 0 8px 32px rgba(46,204,113,0.4);
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── DATE DISPLAY ── */
+  .date-display {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .date-display .date-val {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .date-display .date-change {
+    font-size: 12px;
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    text-decoration: underline;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+
+  /* divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  /* hidden date input */
+  #exp-date-input, #rent-date-input {
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="app-header">
+  <div class="app-title">Warehouse System · Sistema de Almacén</div>
+  <div class="app-name">📦 Warehouse <span>Hub</span></div>
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('expenses')">
+      Expenses <span class="sub">Gastos</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('rental')">
+      Rental Income <span class="sub">Ingresos</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!--  PANEL 1: EXPENSES                      -->
+<!-- ═══════════════════════════════════════ -->
+<div id="panel-expenses" class="panel active">
+
+  <div class="section-tag"><span class="dot"></span>New Entry · Nueva Entrada</div>
+
+  <div class="form-card">
+    <div class="form-card-title">Record Expense</div>
+    <div class="form-card-sub">Registrar Gasto</div>
+
+    <!-- Date -->
+    <div class="field">
+      <label><span class="en">Date</span> <span class="es">/ Fecha</span></label>
+      <div class="date-display">
+        <span class="date-val" id="exp-date-label">--</span>
+        <button class="date-change" onclick="document.getElementById('exp-date-input').click()">Change · Cambiar</button>
+      </div>
+      <input type="date" id="exp-date-input" onchange="setDate('exp')">
+    </div>
+
+    <!-- Category Pills -->
+    <div class="field">
+      <label><span class="en">Category</span> <span class="es">/ Categoría</span></label>
+      <div class="pill-group" id="cat-pills">
+        <button class="pill" onclick="selectPill('cat-pills', this, 'Daily')">Daily · Diario</button>
+        <button class="pill" onclick="selectPill('cat-pills', this, 'Monthly')">Monthly · Mensual</button>
+        <button class="pill" onclick="selectPill('cat-pills', this, 'Misc')">Misc · Otro</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Subcategory Grid -->
+    <div class="field">
+      <label><span class="en">Subcategory</span> <span class="es">/ Subcategoría</span></label>
+      <div class="subcat-grid" id="subcat-grid">
+        <button class="subcat-btn" onclick="selectSubcat(this, 'Groceries')">🛒 Groceries<br><small>Comida</small></button>
+        <button class="subcat-btn" onclick="selectSubcat(this, 'Taxi')">🚕 Taxi<br><small>Taxi</small></button>
+        <button class="subcat-btn" onclick="selectSubcat(this, 'Water')">💧 Water<br><small>Agua</small></button>
+        <button class="subcat-btn" onclick="selectSubcat(this, 'Electricity')">⚡ Electric<br><small>Electricidad</small></button>
+        <button class="subcat-btn" onclick="selectSubcat(this, 'Salary A')">👤 Salary A<br><small>Salario A</small></button>
+        <button class="subcat-btn" onclick="selectSubcat(this, 'Salary B')">👤 Salary B<br><small>Salario B</small></button>
+        <button class="subcat-btn" onclick="selectSubcat(this, 'Salary C')">👤 Salary C<br><small>Salario C</small></button>
+        <button class="subcat-btn" onclick="selectSubcat(this, 'Housing A')">🏠 Housing A<br><small>Vivienda A</small></button>
+        <button class="subcat-btn" onclick="selectSubcat(this, 'Housing B')">🏠 Housing B<br><small>Vivienda B</small></button>
+        <button class="subcat-btn" onclick="selectSubcat(this, 'School')">🎓 School<br><small>Escuela</small></button>
+        <button class="subcat-btn" onclick="selectSubcat(this, 'Maintenance')">🔧 Maint.<br><small>Mantenimiento</small></button>
+        <button class="subcat-btn" onclick="selectSubcat(this, 'Lawyer')">⚖️ Lawyer<br><small>Abogado</small></button>
+        <button class="subcat-btn" onclick="selectSubcat(this, 'Other')">📌 Other<br><small>Otro</small></button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Description -->
+    <div class="field">
+      <label><span class="en">Description</span> <span class="es">/ Descripción</span></label>
+      <textarea id="exp-description" placeholder="e.g. Walmart groceries · Compras en Walmart"></textarea>
+    </div>
+
+    <!-- Amount -->
+    <div class="field">
+      <label><span class="en">Amount</span> <span class="es">/ Monto</span></label>
+      <div class="amount-wrap">
+        <span class="currency">$</span>
+        <input type="number" id="exp-amount" inputmode="decimal" placeholder="0.00" step="0.01">
+      </div>
+    </div>
+
+    <button class="submit-btn" onclick="submitExpense()">
+      Submit Expense
+      <span class="sub-line">Enviar Gasto</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!--  PANEL 2: RENTAL INCOME                 -->
+<!-- ═══════════════════════════════════════ -->
+<div id="panel-rental" class="panel">
+
+  <div class="section-tag"><span class="dot" style="background:var(--accent2)"></span>Rental Income · Ingresos de Renta</div>
+
+  <div class="form-card">
+    <div class="form-card-title">Record Payment</div>
+    <div class="form-card-sub">Registrar Pago de Inquilino</div>
+
+    <!-- Date -->
+    <div class="field">
+      <label><span class="en">Date</span> <span class="es">/ Fecha</span></label>
+      <div class="date-display">
+        <span class="date-val" id="rent-date-label">--</span>
+        <button class="date-change" onclick="document.getElementById('rent-date-input').click()">Change · Cambiar</button>
+      </div>
+      <input type="date" id="rent-date-input" onchange="setDate('rent')">
+    </div>
+
+    <!-- Space # -->
+    <div class="field">
+      <label><span class="en">Warehouse Space #</span> <span class="es">/ Espacio #</span></label>
+      <div class="space-grid" id="space-grid">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Tenant Name -->
+    <div class="field">
+      <label><span class="en">Tenant Name</span> <span class="es">/ Nombre del Inquilino</span></label>
+      <input type="text" id="rent-tenant" placeholder="Full name · Nombre completo" autocomplete="off">
+    </div>
+
+    <!-- Amount -->
+    <div class="field">
+      <label><span class="en">Amount Paid</span> <span class="es">/ Monto Pagado</span></label>
+      <div class="amount-wrap">
+        <span class="currency" style="color:var(--accent2)">$</span>
+        <input type="number" id="rent-amount" inputmode="decimal" placeholder="0.00" step="0.01" style="color:var(--accent2)">
+      </div>
+    </div>
+
+    <!-- Paid? -->
+    <div class="field">
+      <label><span class="en">Payment Status</span> <span class="es">/ Estado de Pago</span></label>
+      <div class="paid-toggle">
+        <button class="paid-opt yes active" id="paid-yes" onclick="setPaid(true)">✅ Paid · Pagado</button>
+        <button class="paid-opt no" id="paid-no" onclick="setPaid(false)">❌ Pending · Pendiente</button>
+      </div>
+    </div>
+
+    <button class="submit-btn" onclick="submitRental()" style="background: var(--accent2);">
+      Submit Payment
+      <span class="sub-line">Enviar Pago</span>
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✅ Submitted! · ¡Enviado!</div>
+
+<script>
+  // ── STATE ──
+  const state = {
+    exp: { date: '', category: '', subcategory: '', description: '', amount: '' },
+    rent: { date: '', space: '', tenant: '', amount: '', paid: true }
+  };
+
+  // ── INIT ──
+  function init() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('exp-date-input').value = today;
+    document.getElementById('rent-date-input').value = today;
+    setDate('exp'); setDate('rent');
+    buildSpaceGrid();
+  }
+
+  function buildSpaceGrid() {
+    const grid = document.getElementById('space-grid');
+    for (let i = 1; i <= 14; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'space-btn';
+      btn.textContent = i < 10 ? '0' + i : '' + i;
+      btn.onclick = () => selectSpace(btn, i);
+      grid.appendChild(btn);
+    }
+  }
+
+  // ── DATE ──
+  function setDate(form) {
+    const input = document.getElementById(form + '-date-input');
+    const label = document.getElementById(form + '-date-label');
+    const d = new Date(input.value + 'T12:00:00');
+    const opts = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+    label.textContent = d.toLocaleDateString('en-US', opts);
+    state[form === 'exp' ? 'exp' : 'rent'].date = input.value;
+  }
+
+  // ── TAB ──
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+      b.classList.toggle('active', (i === 0 && tab === 'expenses') || (i === 1 && tab === 'rental'));
+    });
+    document.getElementById('panel-expenses').classList.toggle('active', tab === 'expenses');
+    document.getElementById('panel-rental').classList.toggle('active', tab === 'rental');
+  }
+
+  // ── PILLS ──
+  function selectPill(groupId, btn, val) {
+    document.querySelectorAll(`#${groupId} .pill`).forEach(p => p.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.exp.category = val;
+  }
+
+  // ── SUBCAT ──
+  function selectSubcat(btn, val) {
+    document.querySelectorAll('#subcat-grid .subcat-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.exp.subcategory = val;
+  }
+
+  // ── SPACE ──
+  function selectSpace(btn, num) {
+    document.querySelectorAll('.space-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.rent.space = num;
+  }
+
+  // ── PAID ──
+  function setPaid(val) {
+    state.rent.paid = val;
+    document.getElementById('paid-yes').classList.toggle('active', val);
+    document.getElementById('paid-no').classList.toggle('active', !val);
+  }
+
+  // ── TOAST ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // ── SUBMIT EXPENSE ──
+  function submitExpense() {
+    const amount = document.getElementById('exp-amount').value;
+    const desc = document.getElementById('exp-description').value;
+    const date = document.getElementById('exp-date-input').value;
+
+    if (!amount || parseFloat(amount) <= 0) {
+      alert('Please enter a valid amount.\nPor favor ingrese un monto válido.'); return;
+    }
+    if (!state.exp.category) {
+      alert('Please select a category.\nSeleccione una categoría.'); return;
+    }
+    if (!state.exp.subcategory) {
+      alert('Please select a subcategory.\nSeleccione una subcategoría.'); return;
+    }
+
+    // ── THIS IS WHERE YOU SEND TO n8n WEBHOOK ──
+    const payload = {
+      date: date,
+      category: state.exp.category,
+      subcategory: state.exp.subcategory,
+      description: desc,
+      amount: parseFloat(amount)
+    };
+
+    console.log('EXPENSE PAYLOAD:', JSON.stringify(payload, null, 2));
+
+    // When n8n is ready, replace console.log with:
+    fetch('https://huerequeque.app.n8n.cloud/webhook-test/expense-entry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    showToast('✅ Expense Recorded · Gasto Registrado');
+    resetExpenseForm();
+  }
+
+  // ── SUBMIT RENTAL ──
+  function submitRental() {
+    const amount = document.getElementById('rent-amount').value;
+    const tenant = document.getElementById('rent-tenant').value;
+    const date = document.getElementById('rent-date-input').value;
+
+    if (!state.rent.space) {
+      alert('Please select a space.\nSeleccione un espacio.'); return;
+    }
+    if (!tenant.trim()) {
+      alert('Please enter tenant name.\nIngrese el nombre del inquilino.'); return;
+    }
+    if (!amount || parseFloat(amount) <= 0) {
+      alert('Please enter a valid amount.\nIngrese un monto válido.'); return;
+    }
+
+    const payload = {
+      date: date,
+      space: state.rent.space,
+      tenant: tenant.trim(),
+      amount: parseFloat(amount),
+      paid: state.rent.paid
+    };
+
+    console.log('RENTAL PAYLOAD:', JSON.stringify(payload, null, 2));
+
+    // fetch('YOUR_N8N_WEBHOOK_URL_RENTAL', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(payload)
+    // });
+
+    showToast('✅ Payment Recorded · Pago Registrado');
+    resetRentalForm();
+  }
+
+  // ── RESET ──
+  function resetExpenseForm() {
+    document.getElementById('exp-amount').value = '';
+    document.getElementById('exp-description').value = '';
+    document.querySelectorAll('#cat-pills .pill').forEach(p => p.classList.remove('selected'));
+    document.querySelectorAll('#subcat-grid .subcat-btn').forEach(b => b.classList.remove('selected'));
+    state.exp.category = ''; state.exp.subcategory = '';
+  }
+
+  function resetRentalForm() {
+    document.getElementById('rent-amount').value = '';
+    document.getElementById('rent-tenant').value = '';
+    document.querySelectorAll('.space-btn').forEach(b => b.classList.remove('selected'));
+    state.rent.space = '';
+    setPaid(true);
+  }
+
+  init();
+</script>
+</body>
+</html>
