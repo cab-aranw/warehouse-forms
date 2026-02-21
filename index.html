@@ -426,10 +426,61 @@
     margin: 20px 0;
   }
 
-  /* hidden date input */
-  #exp-date-input, #rent-date-input {
-    display: none;
+  /* date input — visible and styled */
+  .date-input-wrap {
+    position: relative;
+    width: 100%;
   }
+
+  .date-input-wrap input[type="date"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 44px 14px 16px;
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .date-input-wrap input[type="date"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(245,166,35,0.12);
+  }
+
+  /* calendar icon overlay */
+  .date-input-wrap::after {
+    content: '📅';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    pointer-events: none;
+  }
+
+  /* color fix for date input on dark background */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    width: 44px;
+    height: 100%;
+    cursor: pointer;
+  }
+
+  input[type="date"]::-webkit-datetime-edit { color: var(--text); }
+  input[type="date"]::-webkit-datetime-edit-fields-wrapper { color: var(--text); }
+  input[type="date"]::-webkit-datetime-edit-text { color: var(--muted); }
+  input[type="date"]::-webkit-datetime-edit-month-field { color: var(--accent); }
+  input[type="date"]::-webkit-datetime-edit-day-field { color: var(--accent); }
+  input[type="date"]::-webkit-datetime-edit-year-field { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -462,11 +513,9 @@
     <!-- Date -->
     <div class="field">
       <label><span class="en">Date</span> <span class="es">/ Fecha</span></label>
-      <div class="date-display">
-        <span class="date-val" id="exp-date-label">--</span>
-        <button class="date-change" onclick="document.getElementById('exp-date-input').click()">Change · Cambiar</button>
+      <div class="date-input-wrap">
+        <input type="date" id="exp-date-input" onchange="setDate('exp')">
       </div>
-      <input type="date" id="exp-date-input" onchange="setDate('exp')">
     </div>
 
     <!-- Category Pills -->
@@ -539,11 +588,9 @@
     <!-- Date -->
     <div class="field">
       <label><span class="en">Date</span> <span class="es">/ Fecha</span></label>
-      <div class="date-display">
-        <span class="date-val" id="rent-date-label">--</span>
-        <button class="date-change" onclick="document.getElementById('rent-date-input').click()">Change · Cambiar</button>
+      <div class="date-input-wrap">
+        <input type="date" id="rent-date-input" onchange="setDate('rent')">
       </div>
-      <input type="date" id="rent-date-input" onchange="setDate('rent')">
     </div>
 
     <!-- Space # -->
@@ -602,7 +649,8 @@
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('exp-date-input').value = today;
     document.getElementById('rent-date-input').value = today;
-    setDate('exp'); setDate('rent');
+    state.exp.date = today;
+    state.rent.date = today;
     buildSpaceGrid();
   }
 
@@ -620,10 +668,6 @@
   // ── DATE ──
   function setDate(form) {
     const input = document.getElementById(form + '-date-input');
-    const label = document.getElementById(form + '-date-label');
-    const d = new Date(input.value + 'T12:00:00');
-    const opts = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
-    label.textContent = d.toLocaleDateString('en-US', opts);
     state[form === 'exp' ? 'exp' : 'rent'].date = input.value;
   }
 
@@ -697,9 +741,6 @@
       amount: parseFloat(amount)
     };
 
-    console.log('EXPENSE PAYLOAD:', JSON.stringify(payload, null, 2));
-
-    // When n8n is ready, replace console.log with:
     fetch('https://huerequeque.app.n8n.cloud/webhook/expense-entry', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -734,13 +775,11 @@
       paid: state.rent.paid
     };
 
-    console.log('RENTAL PAYLOAD:', JSON.stringify(payload, null, 2));
-
-    // fetch('YOUR_N8N_WEBHOOK_URL_RENTAL', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(payload)
-    // });
+    fetch('https://huerequeque.app.n8n.cloud/webhook/rental-entry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
     showToast('✅ Payment Recorded · Pago Registrado');
     resetRentalForm();
