@@ -523,7 +523,7 @@
       amount:      parseFloat(amount)
     };
 
-    fetch('https://huerequeque.app.n8n.cloud/webhook/expense-entry', {
+    fetch('https://n8n-production-e569.up.railway.app/webhook/expense-entry', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(payload)
@@ -564,7 +564,7 @@
       paid:   state.rent.paid
     };
 
-    fetch('https://huerequeque.app.n8n.cloud/webhook/rental-entry', {
+    fetch('https://n8n-production-e569.up.railway.app/webhook/rental-entry', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(payload)
