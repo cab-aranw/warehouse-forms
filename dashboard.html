@@ -1,952 +1,834 @@
-<!doctype html>
+<!DOCTYPE html>
 <html class="dark" lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
-      name="viewport"
-    />
-    <title>Sic Parvis Magna — Financial Dashboard</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      :root {
-        --bg: #070a10;
-        --surface: #0d1117;
-        --surface2: #13181f;
-        --surface3: #1a2030;
-        --border: #1e2535;
-        --border2: #2a3347;
-        --primary: #7c5cfc;
-        --primary-dim: #5b3dd4;
-        --primary-glow: rgba(124, 92, 252, 0.15);
-        --accent: #00e5b0;
-        --accent-dim: rgba(0, 229, 176, 0.12);
-        --danger: #ff4d6d;
-        --danger-dim: rgba(255, 77, 109, 0.12);
-        --warning: #ffb830;
-        --warning-dim: rgba(255, 184, 48, 0.12);
-        --text: #e8eaf6;
-        --text2: #8892a4;
-        --text3: #4a5568;
-        --mono: "JetBrains Mono", monospace;
-        --head: "Manrope", sans-serif;
-        --radius: 16px;
-        --radius-sm: 10px;
-      }
-
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      body {
-        background: var(--bg);
-        color: var(--text);
-        font-family: var(--head);
-        min-height: 100vh;
-        overflow-x: hidden;
-      }
-
-      /* ── BACKGROUND EFFECT ── */
-      body::before {
-        content: "";
-        position: fixed;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background:
-          radial-gradient(
-            ellipse at 20% 20%,
-            rgba(124, 92, 252, 0.06) 0%,
-            transparent 50%
-          ),
-          radial-gradient(
-            ellipse at 80% 80%,
-            rgba(0, 229, 176, 0.04) 0%,
-            transparent 50%
-          );
-        pointer-events: none;
-        z-index: 0;
-      }
-
-      /* ── PASSWORD SCREEN ── */
-      #lock-screen {
-        position: fixed;
-        inset: 0;
-        background: var(--bg);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-        padding: 24px;
-      }
-
-      .lock-icon {
-        width: 72px;
-        height: 72px;
-        background: var(--primary-glow);
-        border: 1px solid rgba(124, 92, 252, 0.3);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 24px;
-        animation: pulse 2s infinite;
-      }
-
-      @keyframes pulse {
-        0%,
-        100% {
-          box-shadow: 0 0 0 0 rgba(124, 92, 252, 0.3);
-        }
-        50% {
-          box-shadow: 0 0 0 12px rgba(124, 92, 252, 0);
-        }
-      }
-
-      .lock-title {
-        font-size: 28px;
-        font-weight: 900;
-        text-align: center;
-        margin-bottom: 6px;
-        letter-spacing: -0.5px;
-      }
-
-      .lock-title span {
-        color: var(--primary);
-      }
-
-      .lock-sub {
-        font-size: 13px;
-        color: var(--text2);
-        font-family: var(--mono);
-        text-align: center;
-        margin-bottom: 36px;
-        letter-spacing: 1px;
-      }
-
-      .lock-form {
-        width: 100%;
-        max-width: 340px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .lock-input {
-        width: 100%;
-        background: var(--surface2);
-        border: 1.5px solid var(--border2);
-        border-radius: var(--radius-sm);
-        padding: 16px 20px;
-        color: var(--text);
-        font-family: var(--mono);
-        font-size: 16px;
-        outline: none;
-        transition:
-          border-color 0.2s,
-          box-shadow 0.2s;
-        text-align: center;
-        letter-spacing: 3px;
-      }
-
-      .lock-input:focus {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px var(--primary-glow);
-      }
-
-      .lock-btn {
-        width: 100%;
-        padding: 16px;
-        background: linear-gradient(135deg, var(--primary), var(--primary-dim));
-        border: none;
-        border-radius: var(--radius-sm);
-        color: #fff;
-        font-family: var(--head);
-        font-size: 15px;
-        font-weight: 800;
-        cursor: pointer;
-        letter-spacing: 1px;
-        transition: all 0.2s;
-        text-transform: uppercase;
-      }
-
-      .lock-btn:active {
-        transform: scale(0.98);
-      }
-
-      .lock-error {
-        color: var(--danger);
-        font-size: 12px;
-        font-family: var(--mono);
-        text-align: center;
-        display: none;
-        animation: shake 0.3s ease;
-      }
-
-      @keyframes shake {
-        0%,
-        100% {
-          transform: translateX(0);
-        }
-        25% {
-          transform: translateX(-8px);
-        }
-        75% {
-          transform: translateX(8px);
-        }
-      }
-
-      /* ── MAIN DASHBOARD ── */
-      #dashboard {
-        display: none;
-        position: relative;
-        z-index: 1;
-        max-width: 480px;
-        margin: 0 auto;
-        padding: 0 16px 80px;
-      }
-
-      /* ── HEADER ── */
-      .dash-header {
-        position: sticky;
-        top: 0;
-        background: rgba(7, 10, 16, 0.85);
-        backdrop-filter: blur(20px);
-        border-bottom: 1px solid var(--border);
-        padding: 16px 0;
-        z-index: 100;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 0 -16px;
-        padding: 16px 20px;
-      }
-
-      .dash-brand {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .dash-brand-icon {
-        width: 32px;
-        height: 32px;
-        background: var(--primary-glow);
-        border: 1px solid rgba(124, 92, 252, 0.3);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .dash-brand-name {
-        font-size: 13px;
-        font-weight: 800;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        color: var(--primary);
-        font-family: var(--mono);
-      }
-
-      .dash-logout {
-        background: none;
-        border: 1px solid var(--border2);
-        border-radius: 8px;
-        padding: 6px 12px;
-        color: var(--text2);
-        font-family: var(--mono);
-        font-size: 11px;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
-      .dash-logout:hover {
-        border-color: var(--danger);
-        color: var(--danger);
-      }
-
-      /* ── SECTION ── */
-      .section {
-        margin-top: 28px;
-      }
-
-      .section-label {
-        font-size: 10px;
-        font-family: var(--mono);
-        color: var(--text3);
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin-bottom: 14px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .section-label::after {
-        content: "";
-        flex: 1;
-        height: 1px;
-        background: var(--border);
-      }
-
-      /* ── YEAR SELECTOR ── */
-      .year-selector {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: var(--surface2);
-        border: 1px solid var(--border2);
-        border-radius: var(--radius);
-        padding: 16px 20px;
-        margin-top: 20px;
-      }
-
-      .year-label {
-        font-size: 12px;
-        font-family: var(--mono);
-        color: var(--text2);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-      }
-
-      .year-select {
-        background: var(--surface3);
-        border: 1px solid var(--border2);
-        border-radius: 8px;
-        padding: 8px 16px;
-        color: var(--text);
-        font-family: var(--mono);
-        font-size: 16px;
-        font-weight: 700;
-        outline: none;
-        cursor: pointer;
-        appearance: none;
-        -webkit-appearance: none;
-        padding-right: 32px;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238892a4' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 10px center;
-      }
-
-      /* ── ANNUAL SUMMARY CARDS ── */
-      .summary-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        margin-top: 14px;
-      }
-
-      .summary-card {
-        background: var(--surface2);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 18px;
-        position: relative;
-        overflow: hidden;
-        transition: transform 0.2s;
-      }
-
-      .summary-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 2px;
-      }
-
-      .summary-card.revenue::before {
-        background: var(--accent);
-      }
-      .summary-card.expenses::before {
-        background: var(--danger);
-      }
-      .summary-card.profit::before {
-        background: var(--primary);
-      }
-      .summary-card.margin::before {
-        background: var(--warning);
-      }
-
-      .summary-card-label {
-        font-size: 10px;
-        font-family: var(--mono);
-        color: var(--text2);
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        margin-bottom: 8px;
-      }
-
-      .summary-card-value {
-        font-size: 22px;
-        font-weight: 900;
-        font-family: var(--mono);
-        letter-spacing: -1px;
-      }
-
-      .summary-card.revenue .summary-card-value {
-        color: var(--accent);
-      }
-      .summary-card.expenses .summary-card-value {
-        color: var(--danger);
-      }
-      .summary-card.profit .summary-card-value {
-        color: var(--primary);
-      }
-      .summary-card.margin .summary-card-value {
-        color: var(--warning);
-      }
-
-      .summary-card-sub {
-        font-size: 10px;
-        color: var(--text3);
-        font-family: var(--mono);
-        margin-top: 4px;
-      }
-
-      /* ── HIGHLIGHT CARDS ── */
-      .highlight-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        margin-top: 14px;
-      }
-
-      .highlight-card {
-        background: var(--surface2);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 16px;
-      }
-
-      .highlight-icon {
-        font-size: 20px;
-        margin-bottom: 8px;
-      }
-
-      .highlight-label {
-        font-size: 10px;
-        font-family: var(--mono);
-        color: var(--text2);
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        margin-bottom: 4px;
-      }
-
-      .highlight-month {
-        font-size: 15px;
-        font-weight: 800;
-        color: var(--text);
-        margin-bottom: 2px;
-      }
-
-      .highlight-amount {
-        font-size: 13px;
-        font-family: var(--mono);
-        color: var(--text2);
-      }
-
-      /* ── MONTH GRID ── */
-      .month-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-        margin-top: 14px;
-      }
-
-      .month-btn {
-        background: var(--surface2);
-        border: 1.5px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 14px 8px;
-        cursor: pointer;
-        transition: all 0.18s;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .month-btn:active {
-        transform: scale(0.96);
-      }
-
-      .month-btn.profit-month {
-        border-color: rgba(0, 229, 176, 0.3);
-        background: rgba(0, 229, 176, 0.05);
-      }
-
-      .month-btn.loss-month {
-        border-color: rgba(255, 77, 109, 0.3);
-        background: rgba(255, 77, 109, 0.05);
-      }
-
-      .month-btn.current-month {
-        border-color: var(--primary);
-        background: var(--primary-glow);
-        box-shadow: 0 0 20px rgba(124, 92, 252, 0.2);
-      }
-
-      .month-btn.selected {
-        border-color: var(--primary);
-        background: var(--primary-glow);
-        transform: scale(1.02);
-      }
-
-      .month-btn.no-data {
-        opacity: 0.4;
-      }
-
-      .month-name {
-        font-size: 12px;
-        font-weight: 800;
-        color: var(--text);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        display: block;
-      }
-
-      .month-name-es {
-        font-size: 9px;
-        color: var(--text3);
-        font-family: var(--mono);
-        display: block;
-        margin-top: 2px;
-      }
-
-      .month-indicator {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        margin: 6px auto 0;
-      }
-
-      .profit-month .month-indicator {
-        background: var(--accent);
-      }
-      .loss-month .month-indicator {
-        background: var(--danger);
-      }
-      .current-month .month-indicator {
-        background: var(--primary);
-      }
-      .no-data .month-indicator {
-        background: var(--text3);
-      }
-
-      /* ── MONTH DETAIL PANEL ── */
-      .month-detail {
-        background: var(--surface2);
-        border: 1px solid var(--border2);
-        border-radius: var(--radius);
-        padding: 20px;
-        margin-top: 14px;
-        display: none;
-        animation: slideIn 0.2s ease;
-      }
-
-      .month-detail.visible {
-        display: block;
-      }
-
-      @keyframes slideIn {
-        from {
-          opacity: 0;
-          transform: translateY(8px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .detail-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-      }
-
-      .detail-month-name {
-        font-size: 20px;
-        font-weight: 900;
-        letter-spacing: -0.5px;
-      }
-
-      .detail-status {
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 700;
-        font-family: var(--mono);
-      }
-
-      .detail-status.profit {
-        background: var(--accent-dim);
-        color: var(--accent);
-      }
-
-      .detail-status.loss {
-        background: var(--danger-dim);
-        color: var(--danger);
-      }
-
-      .detail-rows {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .detail-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px 16px;
-        background: var(--surface3);
-        border-radius: var(--radius-sm);
-      }
-
-      .detail-row-label {
-        font-size: 12px;
-        color: var(--text2);
-        font-family: var(--mono);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-      }
-
-      .detail-row-value {
-        font-size: 18px;
-        font-weight: 800;
-        font-family: var(--mono);
-        letter-spacing: -0.5px;
-      }
-
-      .detail-row.revenue .detail-row-value {
-        color: var(--accent);
-      }
-      .detail-row.expenses .detail-row-value {
-        color: var(--danger);
-      }
-      .detail-row.profit .detail-row-value {
-        color: var(--primary);
-      }
-
-      /* Progress bar */
-      .detail-bar {
-        height: 4px;
-        background: var(--surface3);
-        border-radius: 2px;
-        margin-top: 16px;
-        overflow: hidden;
-      }
-
-      .detail-bar-fill {
-        height: 100%;
-        border-radius: 2px;
-        background: linear-gradient(90deg, var(--primary), var(--accent));
-        transition: width 0.6s ease;
-      }
-
-      .detail-bar-label {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 6px;
-        font-size: 10px;
-        font-family: var(--mono);
-        color: var(--text3);
-      }
-
-      /* ── LOADING ── */
-      .loading-overlay {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 40px;
-        gap: 12px;
-      }
-
-      .spinner {
-        width: 32px;
-        height: 32px;
-        border: 3px solid var(--border2);
-        border-top-color: var(--primary);
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-      }
-
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      .loading-text {
-        font-size: 12px;
-        font-family: var(--mono);
-        color: var(--text2);
-        letter-spacing: 1px;
-      }
-
-      /* ── FOOTER ── */
-      .dash-footer {
-        text-align: center;
-        padding: 20px 0 0;
-        font-size: 10px;
-        font-family: var(--mono);
-        color: var(--text3);
-        letter-spacing: 1px;
-      }
-
-      /* Material icons */
-      .material-symbols-outlined {
-        font-variation-settings:
-          "FILL" 0,
-          "wght" 400,
-          "GRAD" 0,
-          "opsz" 24;
-      }
-    </style>
-  </head>
-  <body>
-    <!-- ── PASSWORD SCREEN ── -->
-    <div id="lock-screen">
-      <div class="lock-icon">
-        <span
-          class="material-symbols-outlined"
-          style="color: #7c5cfc; font-size: 32px"
-          >lock</span
-        >
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0" name="viewport"/>
+<title>Sic Parvis Magna — Financial Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #070a10;
+    --surface: #0d1117;
+    --surface2: #13181f;
+    --surface3: #1a2030;
+    --border: #1e2535;
+    --border2: #2a3347;
+    --primary: #7c5cfc;
+    --primary-dim: #5b3dd4;
+    --primary-glow: rgba(124,92,252,0.15);
+    --accent: #00e5b0;
+    --accent-dim: rgba(0,229,176,0.12);
+    --danger: #ff4d6d;
+    --danger-dim: rgba(255,77,109,0.12);
+    --warning: #ffb830;
+    --warning-dim: rgba(255,184,48,0.12);
+    --text: #e8eaf6;
+    --text2: #8892a4;
+    --text3: #4a5568;
+    --mono: 'JetBrains Mono', monospace;
+    --head: 'Manrope', sans-serif;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--head);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── BACKGROUND EFFECT ── */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 20% 20%, rgba(124,92,252,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(0,229,176,0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── PASSWORD SCREEN ── */
+  #lock-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 24px;
+  }
+
+  .lock-icon {
+    width: 72px; height: 72px;
+    background: var(--primary-glow);
+    border: 1px solid rgba(124,92,252,0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(124,92,252,0.3); }
+    50% { box-shadow: 0 0 0 12px rgba(124,92,252,0); }
+  }
+
+  .lock-title {
+    font-size: 28px;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+
+  .lock-title span { color: var(--primary); }
+
+  .lock-sub {
+    font-size: 13px;
+    color: var(--text2);
+    font-family: var(--mono);
+    text-align: center;
+    margin-bottom: 36px;
+    letter-spacing: 1px;
+  }
+
+  .lock-form {
+    width: 100%;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .lock-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    text-align: center;
+    letter-spacing: 3px;
+  }
+
+  .lock-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+  }
+
+  .lock-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dim));
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #fff;
+    font-family: var(--head);
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .lock-btn:active { transform: scale(0.98); }
+
+  .lock-error {
+    color: var(--danger);
+    font-size: 12px;
+    font-family: var(--mono);
+    text-align: center;
+    display: none;
+    animation: shake 0.3s ease;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+
+  /* ── MAIN DASHBOARD ── */
+  #dashboard {
+    display: none;
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 16px 80px;
+  }
+
+  /* ── HEADER ── */
+  .dash-header {
+    position: sticky;
+    top: 0;
+    background: rgba(7,10,16,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 -16px;
+    padding: 16px 20px;
+  }
+
+  .dash-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dash-brand-icon {
+    width: 32px; height: 32px;
+    background: var(--primary-glow);
+    border: 1px solid rgba(124,92,252,0.3);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dash-brand-name {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--primary);
+    font-family: var(--mono);
+  }
+
+  .dash-logout {
+    background: none;
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .dash-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* ── SECTION ── */
+  .section { margin-top: 28px; }
+
+  .section-label {
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── YEAR SELECTOR ── */
+  .year-selector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-top: 20px;
+  }
+
+  .year-label {
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .year-select {
+    background: var(--surface3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 8px 16px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 700;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 32px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238892a4' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+
+  /* ── ANNUAL SUMMARY CARDS ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .summary-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
+  }
+
+  .summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .summary-card.revenue::before { background: var(--accent); }
+  .summary-card.expenses::before { background: var(--danger); }
+  .summary-card.profit::before { background: var(--primary); }
+  .summary-card.margin::before { background: var(--warning); }
+
+  .summary-card-label {
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--text2);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .summary-card-value {
+    font-size: 22px;
+    font-weight: 900;
+    font-family: var(--mono);
+    letter-spacing: -1px;
+  }
+
+  .summary-card.revenue .summary-card-value { color: var(--accent); }
+  .summary-card.expenses .summary-card-value { color: var(--danger); }
+  .summary-card.profit .summary-card-value { color: var(--primary); }
+  .summary-card.margin .summary-card-value { color: var(--warning); }
+
+  .summary-card-sub {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: var(--mono);
+    margin-top: 4px;
+  }
+
+  /* ── HIGHLIGHT CARDS ── */
+  .highlight-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .highlight-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+
+  .highlight-icon { font-size: 20px; margin-bottom: 8px; }
+
+  .highlight-label {
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--text2);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .highlight-month {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .highlight-amount {
+    font-size: 13px;
+    font-family: var(--mono);
+    color: var(--text2);
+  }
+
+  /* ── MONTH GRID ── */
+  .month-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .month-btn {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 8px;
+    cursor: pointer;
+    transition: all 0.18s;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .month-btn:active { transform: scale(0.96); }
+
+  .month-btn.profit-month {
+    border-color: rgba(0,229,176,0.3);
+    background: rgba(0,229,176,0.05);
+  }
+
+  .month-btn.loss-month {
+    border-color: rgba(255,77,109,0.3);
+    background: rgba(255,77,109,0.05);
+  }
+
+  .month-btn.current-month {
+    border-color: var(--primary);
+    background: var(--primary-glow);
+    box-shadow: 0 0 20px rgba(124,92,252,0.2);
+  }
+
+  .month-btn.selected {
+    border-color: var(--primary);
+    background: var(--primary-glow);
+    transform: scale(1.02);
+  }
+
+  .month-btn.no-data {
+    opacity: 0.4;
+  }
+
+  .month-name {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+  }
+
+  .month-name-es {
+    font-size: 9px;
+    color: var(--text3);
+    font-family: var(--mono);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .month-indicator {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    margin: 6px auto 0;
+  }
+
+  .profit-month .month-indicator { background: var(--accent); }
+  .loss-month .month-indicator { background: var(--danger); }
+  .current-month .month-indicator { background: var(--primary); }
+  .no-data .month-indicator { background: var(--text3); }
+
+  /* ── MONTH DETAIL PANEL ── */
+  .month-detail {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-top: 14px;
+    display: none;
+    animation: slideIn 0.2s ease;
+  }
+
+  .month-detail.visible { display: block; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .detail-month-name {
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+  }
+
+  .detail-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--mono);
+  }
+
+  .detail-status.profit {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .detail-status.loss {
+    background: var(--danger-dim);
+    color: var(--danger);
+  }
+
+  .detail-rows { display: flex; flex-direction: column; gap: 12px; }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--surface3);
+    border-radius: var(--radius-sm);
+  }
+
+  .detail-row-label {
+    font-size: 12px;
+    color: var(--text2);
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .detail-row-value {
+    font-size: 18px;
+    font-weight: 800;
+    font-family: var(--mono);
+    letter-spacing: -0.5px;
+  }
+
+  .detail-row.revenue .detail-row-value { color: var(--accent); }
+  .detail-row.expenses .detail-row-value { color: var(--danger); }
+  .detail-row.profit .detail-row-value { color: var(--primary); }
+
+  /* Progress bar */
+  .detail-bar {
+    height: 4px;
+    background: var(--surface3);
+    border-radius: 2px;
+    margin-top: 16px;
+    overflow: hidden;
+  }
+
+  .detail-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    transition: width 0.6s ease;
+  }
+
+  .detail-bar-label {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--text3);
+  }
+
+  /* ── LOADING ── */
+  .loading-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    gap: 12px;
+  }
+
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--text2);
+    letter-spacing: 1px;
+  }
+
+  /* ── FOOTER ── */
+  .dash-footer {
+    text-align: center;
+    padding: 20px 0 0;
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--text3);
+    letter-spacing: 1px;
+  }
+
+  /* Material icons */
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── PASSWORD SCREEN ── -->
+<div id="lock-screen">
+  <div class="lock-icon">
+    <span class="material-symbols-outlined" style="color:#7c5cfc;font-size:32px;">lock</span>
+  </div>
+  <div class="lock-title">Sic Parvis <span>Magna</span></div>
+  <div class="lock-sub">FINANCIAL DASHBOARD · PANEL FINANCIERO</div>
+  <div class="lock-form">
+    <input type="password" class="lock-input" id="pwd-input"
+      placeholder="••••••••••"
+      onkeydown="if(event.key==='Enter') checkPassword()"/>
+    <button class="lock-btn" onclick="checkPassword()">
+      Access Dashboard · Acceder
+    </button>
+    <div class="lock-error" id="lock-error">
+      ❌ Incorrect password · Contraseña incorrecta
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN DASHBOARD ── -->
+<div id="dashboard">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <div class="dash-brand">
+      <div class="dash-brand-icon">
+        <span class="material-symbols-outlined" style="color:#7c5cfc;font-size:16px;">grid_view</span>
       </div>
-      <div class="lock-title">Sic Parvis <span>Magna</span></div>
-      <div class="lock-sub">FINANCIAL DASHBOARD · PANEL FINANCIERO</div>
-      <div class="lock-form">
-        <input
-          type="password"
-          class="lock-input"
-          id="pwd-input"
-          placeholder="••••••••••"
-          onkeydown="if (event.key === 'Enter') checkPassword();"
-        />
-        <button class="lock-btn" onclick="checkPassword()">
-          Access Dashboard · Acceder
-        </button>
-        <div class="lock-error" id="lock-error">
-          ❌ Incorrect password · Contraseña incorrecta
+      <span class="dash-brand-name">Sic Parvis Magna</span>
+    </div>
+    <button class="dash-logout" onclick="logout()">
+      🔒 Lock · Cerrar
+    </button>
+  </div>
+
+  <!-- Year Selector -->
+  <div class="year-selector">
+    <span class="year-label">📅 Fiscal Year · Año Fiscal</span>
+    <select class="year-select" id="year-select" onchange="loadData()">
+      <option value="2026">2026</option>
+      <option value="2025">2025</option>
+      <option value="2024">2024</option>
+      <option value="2023">2023</option>
+    </select>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">LOADING DATA · CARGANDO DATOS</div>
+  </div>
+
+  <!-- Content (hidden until data loads) -->
+  <div id="content" style="display:none">
+
+    <!-- Annual Summary -->
+    <div class="section">
+      <div class="section-label">Annual Summary · Resumen Anual</div>
+      <div class="summary-grid">
+        <div class="summary-card revenue">
+          <div class="summary-card-label">💰 Revenue · Ingresos</div>
+          <div class="summary-card-value" id="annual-revenue">$0</div>
+          <div class="summary-card-sub">Total year · Total año</div>
+        </div>
+        <div class="summary-card expenses">
+          <div class="summary-card-label">💸 Expenses · Gastos</div>
+          <div class="summary-card-value" id="annual-expenses">$0</div>
+          <div class="summary-card-sub">Total year · Total año</div>
+        </div>
+        <div class="summary-card profit">
+          <div class="summary-card-label">📈 Net Profit · Ganancia</div>
+          <div class="summary-card-value" id="annual-profit">$0</div>
+          <div class="summary-card-sub">Revenue - Expenses</div>
+        </div>
+        <div class="summary-card margin">
+          <div class="summary-card-label">📊 Margin · Margen</div>
+          <div class="summary-card-value" id="annual-margin">0%</div>
+          <div class="summary-card-sub">Profit margin · Margen</div>
         </div>
       </div>
     </div>
 
-    <!-- ── MAIN DASHBOARD ── -->
-    <div id="dashboard">
-      <!-- Header -->
-      <div class="dash-header">
-        <div class="dash-brand">
-          <div class="dash-brand-icon">
-            <span
-              class="material-symbols-outlined"
-              style="color: #7c5cfc; font-size: 16px"
-              >grid_view</span
-            >
-          </div>
-          <span class="dash-brand-name">Sic Parvis Magna</span>
+    <!-- Best / Worst Month -->
+    <div class="section">
+      <div class="section-label">Highlights · Destacados</div>
+      <div class="highlight-grid">
+        <div class="highlight-card">
+          <div class="highlight-icon">🏆</div>
+          <div class="highlight-label">Best Month · Mejor Mes</div>
+          <div class="highlight-month" id="best-month">—</div>
+          <div class="highlight-amount" id="best-amount">$0</div>
         </div>
-        <button class="dash-logout" onclick="logout()">🔒 Lock · Cerrar</button>
-      </div>
-
-      <!-- Year Selector -->
-      <div class="year-selector">
-        <span class="year-label">📅 Fiscal Year · Año Fiscal</span>
-        <select class="year-select" id="year-select" onchange="loadData()">
-          <option value="2026">2026</option>
-          <option value="2025">2025</option>
-          <option value="2024">2024</option>
-          <option value="2023">2023</option>
-        </select>
-      </div>
-
-      <!-- Loading -->
-      <div id="loading" class="loading-overlay">
-        <div class="spinner"></div>
-        <div class="loading-text">LOADING DATA · CARGANDO DATOS</div>
-      </div>
-
-      <!-- Content (hidden until data loads) -->
-      <div id="content" style="display: none">
-        <!-- Annual Summary -->
-        <div class="section">
-          <div class="section-label">Annual Summary · Resumen Anual</div>
-          <div class="summary-grid">
-            <div class="summary-card revenue">
-              <div class="summary-card-label">💰 Revenue · Ingresos</div>
-              <div class="summary-card-value" id="annual-revenue">$0</div>
-              <div class="summary-card-sub">Total year · Total año</div>
-            </div>
-            <div class="summary-card expenses">
-              <div class="summary-card-label">💸 Expenses · Gastos</div>
-              <div class="summary-card-value" id="annual-expenses">$0</div>
-              <div class="summary-card-sub">Total year · Total año</div>
-            </div>
-            <div class="summary-card profit">
-              <div class="summary-card-label">📈 Net Profit · Ganancia</div>
-              <div class="summary-card-value" id="annual-profit">$0</div>
-              <div class="summary-card-sub">Revenue - Expenses</div>
-            </div>
-            <div class="summary-card margin">
-              <div class="summary-card-label">📊 Margin · Margen</div>
-              <div class="summary-card-value" id="annual-margin">0%</div>
-              <div class="summary-card-sub">Profit margin · Margen</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Best / Worst Month -->
-        <div class="section">
-          <div class="section-label">Highlights · Destacados</div>
-          <div class="highlight-grid">
-            <div class="highlight-card">
-              <div class="highlight-icon">🏆</div>
-              <div class="highlight-label">Best Month · Mejor Mes</div>
-              <div class="highlight-month" id="best-month">—</div>
-              <div class="highlight-amount" id="best-amount">$0</div>
-            </div>
-            <div class="highlight-card">
-              <div class="highlight-icon">⚠️</div>
-              <div class="highlight-label">Worst Month · Peor Mes</div>
-              <div class="highlight-month" id="worst-month">—</div>
-              <div class="highlight-amount" id="worst-amount">$0</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Month Grid -->
-        <div class="section">
-          <div class="section-label">Monthly View · Vista Mensual</div>
-          <div class="month-grid" id="month-grid"></div>
-        </div>
-
-        <!-- Month Detail Panel -->
-        <div class="month-detail" id="month-detail">
-          <div class="detail-header">
-            <div class="detail-month-name" id="detail-month-name">—</div>
-            <div class="detail-status" id="detail-status">—</div>
-          </div>
-          <div class="detail-rows">
-            <div class="detail-row revenue">
-              <span class="detail-row-label">💰 Revenue · Ingresos</span>
-              <span class="detail-row-value" id="detail-revenue">$0</span>
-            </div>
-            <div class="detail-row expenses">
-              <span class="detail-row-label">💸 Expenses · Gastos</span>
-              <span class="detail-row-value" id="detail-expenses">$0</span>
-            </div>
-            <div class="detail-row profit">
-              <span class="detail-row-label">📈 Net Profit · Ganancia</span>
-              <span class="detail-row-value" id="detail-profit">$0</span>
-            </div>
-          </div>
-          <div class="detail-bar">
-            <div
-              class="detail-bar-fill"
-              id="detail-bar-fill"
-              style="width: 0%"
-            ></div>
-          </div>
-          <div class="detail-bar-label">
-            <span>Expenses · Gastos</span>
-            <span id="detail-bar-pct">0% of revenue</span>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="dash-footer">
-          SIC PARVIS MAGNA · WAREHOUSE FINANCIAL SYSTEM<br />
-          Data updates in real time · Datos en tiempo real
+        <div class="highlight-card">
+          <div class="highlight-icon">⚠️</div>
+          <div class="highlight-label">Worst Month · Peor Mes</div>
+          <div class="highlight-month" id="worst-month">—</div>
+          <div class="highlight-amount" id="worst-amount">$0</div>
         </div>
       </div>
     </div>
 
-    <script>
-      // ── CONFIG ──
-      const SHEET_ID = "1xjdOP0fRxxb7LgAhL4BATOZ7YuToQxesB8b2cwRv7wU";
-      const API_KEY = "AIzaSyB8dTm8o3fcFT8JOWdNeZynAs653WLFsJs";
-      const PASSWORD = "C0m0HasCambiadoPelon4#846";
-      const SHEET_TAB = "Monthly Summary";
+    <!-- Month Grid -->
+    <div class="section">
+      <div class="section-label">Monthly View · Vista Mensual</div>
+      <div class="month-grid" id="month-grid"></div>
+    </div>
 
-      const MONTHS = [
-        { en: "January", es: "Enero", short: "JAN" },
-        { en: "February", es: "Febrero", short: "FEB" },
-        { en: "March", es: "Marzo", short: "MAR" },
-        { en: "April", es: "Abril", short: "ABR" },
-        { en: "May", es: "Mayo", short: "MAY" },
-        { en: "June", es: "Junio", short: "JUN" },
-        { en: "July", es: "Julio", short: "JUL" },
-        { en: "August", es: "Agosto", short: "AGO" },
-        { en: "September", es: "Septiembre", short: "SEP" },
-        { en: "October", es: "Octubre", short: "OCT" },
-        { en: "November", es: "Noviembre", short: "NOV" },
-        { en: "December", es: "Diciembre", short: "DIC" },
-      ];
+    <!-- Month Detail Panel -->
+    <div class="month-detail" id="month-detail">
+      <div class="detail-header">
+        <div class="detail-month-name" id="detail-month-name">—</div>
+        <div class="detail-status" id="detail-status">—</div>
+      </div>
+      <div class="detail-rows">
+        <div class="detail-row revenue">
+          <span class="detail-row-label">💰 Revenue · Ingresos</span>
+          <span class="detail-row-value" id="detail-revenue">$0</span>
+        </div>
+        <div class="detail-row expenses">
+          <span class="detail-row-label">💸 Expenses · Gastos</span>
+          <span class="detail-row-value" id="detail-expenses">$0</span>
+        </div>
+        <div class="detail-row profit">
+          <span class="detail-row-label">📈 Net Profit · Ganancia</span>
+          <span class="detail-row-value" id="detail-profit">$0</span>
+        </div>
+      </div>
+      <div class="detail-bar">
+        <div class="detail-bar-fill" id="detail-bar-fill" style="width:0%"></div>
+      </div>
+      <div class="detail-bar-label">
+        <span>Expenses · Gastos</span>
+        <span id="detail-bar-pct">0% of revenue</span>
+      </div>
+    </div>
 
-      let sheetData = [];
-      const currentMonth = new Date().getMonth(); // 0-indexed
-      const currentYear = new Date().getFullYear();
+    <!-- Footer -->
+    <div class="dash-footer">
+      SIC PARVIS MAGNA · WAREHOUSE FINANCIAL SYSTEM<br>
+      Data updates in real time · Datos en tiempo real
+    </div>
 
-      // ── PASSWORD ──
-      function checkPassword() {
-        const input = document.getElementById("pwd-input").value;
-        const error = document.getElementById("lock-error");
-        if (input === PASSWORD) {
-          document.getElementById("lock-screen").style.display = "none";
-          document.getElementById("dashboard").style.display = "block";
-          loadData();
-        } else {
-          error.style.display = "block";
-          error.style.animation = "none";
-          setTimeout(() => (error.style.animation = "shake 0.3s ease"), 10);
-          document.getElementById("pwd-input").value = "";
-        }
-      }
+  </div>
+</div>
 
-      function logout() {
-        document.getElementById("lock-screen").style.display = "flex";
-        document.getElementById("dashboard").style.display = "none";
-        document.getElementById("pwd-input").value = "";
-        document.getElementById("lock-error").style.display = "none";
-      }
+<script>
+  // ── CONFIG ──
+  const PROXY_URL = 'https://n8n-production-e569.up.railway.app/webhook/sheets-data';
+  const PASSWORD  = 'C0m0HasCambiadoPelon4#846';
 
-      // ── LOAD DATA FROM GOOGLE SHEETS ──
-      async function loadData() {
-        const year = document.getElementById("year-select").value;
-        document.getElementById("loading").style.display = "flex";
-        document.getElementById("content").style.display = "none";
-        document.getElementById("month-detail").classList.remove("visible");
+  const MONTHS = [
+    { en: 'January',   es: 'Enero',      short: 'JAN' },
+    { en: 'February',  es: 'Febrero',    short: 'FEB' },
+    { en: 'March',     es: 'Marzo',      short: 'MAR' },
+    { en: 'April',     es: 'Abril',      short: 'ABR' },
+    { en: 'May',       es: 'Mayo',       short: 'MAY' },
+    { en: 'June',      es: 'Junio',      short: 'JUN' },
+    { en: 'July',      es: 'Julio',      short: 'JUL' },
+    { en: 'August',    es: 'Agosto',     short: 'AGO' },
+    { en: 'September', es: 'Septiembre', short: 'SEP' },
+    { en: 'October',   es: 'Octubre',    short: 'OCT' },
+    { en: 'November',  es: 'Noviembre',  short: 'NOV' },
+    { en: 'December',  es: 'Diciembre',  short: 'DIC' }
+  ];
 
-        try {
-          const range = encodeURIComponent(`${SHEET_TAB}!A2:E13`);
-          const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
-          const res = await fetch(url);
-          const json = await res.json();
+  let sheetData = [];
+  const currentMonth = new Date().getMonth(); // 0-indexed
+  const currentYear  = new Date().getFullYear();
 
-          if (json.error) throw new Error(json.error.message);
+  // ── PASSWORD ──
+  function checkPassword() {
+    const input = document.getElementById('pwd-input').value;
+    const error = document.getElementById('lock-error');
+    if (input === PASSWORD) {
+      document.getElementById('lock-screen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadData();
+    } else {
+      error.style.display = 'block';
+      error.style.animation = 'none';
+      setTimeout(() => error.style.animation = 'shake 0.3s ease', 10);
+      document.getElementById('pwd-input').value = '';
+    }
+  }
 
-          sheetData = parseSheetData(json.values || [], year);
-          renderDashboard(sheetData, year);
+  function logout() {
+    document.getElementById('lock-screen').style.display = 'flex';
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('pwd-input').value = '';
+    document.getElementById('lock-error').style.display = 'none';
+  }
 
-          document.getElementById("loading").style.display = "none";
-          document.getElementById("content").style.display = "block";
-        } catch (err) {
-          document.getElementById("loading").innerHTML = `
+  // ── LOAD DATA FROM RAILWAY PROXY ──
+  async function loadData() {
+    const year = document.getElementById('year-select').value;
+    document.getElementById('loading').style.display = 'flex';
+    document.getElementById('content').style.display = 'none';
+    document.getElementById('month-detail').classList.remove('visible');
+
+    try {
+      const res  = await fetch(`${PROXY_URL}?year=${year}`);
+      const json = await res.json();
+
+      if (!json || json.error) throw new Error(json?.error?.message || 'Failed to load data');
+
+      const rows = json.values || [];
+      sheetData = parseSheetData(rows, year);
+      renderDashboard(sheetData, year);
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+
+    } catch (err) {
+      document.getElementById('loading').innerHTML = `
         <div style="text-align:center;padding:20px;">
           <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
           <div style="color:#ff4d6d;font-family:var(--mono);font-size:12px;margin-bottom:8px;">
@@ -959,171 +841,133 @@
             Retry · Reintentar
           </button>
         </div>`;
-        }
-      }
+    }
+  }
 
-      // ── PARSE SHEET DATA ──
-      function parseSheetData(rows, year) {
-        return MONTHS.map((m, i) => {
-          const row = rows[i] || [];
-          const revenue =
-            parseFloat((row[1] || "0").toString().replace(/[^0-9.-]/g, "")) ||
-            0;
-          const expenses =
-            parseFloat((row[2] || "0").toString().replace(/[^0-9.-]/g, "")) ||
-            0;
-          const profit = revenue - expenses;
-          return {
-            month: m,
-            revenue,
-            expenses,
-            profit,
-            hasData: revenue > 0 || expenses > 0,
-          };
-        });
-      }
+  // ── PARSE SHEET DATA ──
+  function parseSheetData(rows, year) {
+    return MONTHS.map((m, i) => {
+      const row = rows[i] || [];
+      const revenue  = parseFloat((row[1] || '0').toString().replace(/[^0-9.-]/g, '')) || 0;
+      const expenses = parseFloat((row[2] || '0').toString().replace(/[^0-9.-]/g, '')) || 0;
+      const profit   = revenue - expenses;
+      return { month: m, revenue, expenses, profit, hasData: revenue > 0 || expenses > 0 };
+    });
+  }
 
-      // ── RENDER DASHBOARD ──
-      function renderDashboard(data, year) {
-        const selectedYear = parseInt(year);
+  // ── RENDER DASHBOARD ──
+  function renderDashboard(data, year) {
+    const selectedYear = parseInt(year);
 
-        // Annual totals
-        const totalRevenue = data.reduce((s, d) => s + d.revenue, 0);
-        const totalExpenses = data.reduce((s, d) => s + d.expenses, 0);
-        const totalProfit = totalRevenue - totalExpenses;
-        const margin =
-          totalRevenue > 0
-            ? ((totalProfit / totalRevenue) * 100).toFixed(1)
-            : 0;
+    // Annual totals
+    const totalRevenue  = data.reduce((s, d) => s + d.revenue, 0);
+    const totalExpenses = data.reduce((s, d) => s + d.expenses, 0);
+    const totalProfit   = totalRevenue - totalExpenses;
+    const margin        = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : 0;
 
-        document.getElementById("annual-revenue").textContent =
-          fmt(totalRevenue);
-        document.getElementById("annual-expenses").textContent =
-          fmt(totalExpenses);
-        document.getElementById("annual-profit").textContent = fmt(totalProfit);
-        document.getElementById("annual-margin").textContent = `${margin}%`;
+    document.getElementById('annual-revenue').textContent  = fmt(totalRevenue);
+    document.getElementById('annual-expenses').textContent = fmt(totalExpenses);
+    document.getElementById('annual-profit').textContent   = fmt(totalProfit);
+    document.getElementById('annual-margin').textContent   = `${margin}%`;
 
-        // Color profit based on positive/negative
-        const profitEl = document.getElementById("annual-profit");
-        profitEl.style.color =
-          totalProfit >= 0 ? "var(--accent)" : "var(--danger)";
+    // Color profit based on positive/negative
+    const profitEl = document.getElementById('annual-profit');
+    profitEl.style.color = totalProfit >= 0 ? 'var(--accent)' : 'var(--danger)';
 
-        // Best and worst months
-        const dataMonths = data.filter((d) => d.hasData);
-        if (dataMonths.length > 0) {
-          const best = dataMonths.reduce((a, b) =>
-            b.profit > a.profit ? b : a,
-          );
-          const worst = dataMonths.reduce((a, b) =>
-            b.profit < a.profit ? b : a,
-          );
-          document.getElementById("best-month").textContent = best.month.en;
-          document.getElementById("best-amount").textContent = fmt(best.profit);
-          document.getElementById("worst-month").textContent = worst.month.en;
-          document.getElementById("worst-amount").textContent = fmt(
-            worst.profit,
-          );
-        }
+    // Best and worst months
+    const dataMonths = data.filter(d => d.hasData);
+    if (dataMonths.length > 0) {
+      const best  = dataMonths.reduce((a, b) => b.profit > a.profit ? b : a);
+      const worst = dataMonths.reduce((a, b) => b.profit < a.profit ? b : a);
+      document.getElementById('best-month').textContent  = best.month.en;
+      document.getElementById('best-amount').textContent = fmt(best.profit);
+      document.getElementById('worst-month').textContent  = worst.month.en;
+      document.getElementById('worst-amount').textContent = fmt(worst.profit);
+    }
 
-        // Month grid
-        const grid = document.getElementById("month-grid");
-        grid.innerHTML = "";
-        data.forEach((d, i) => {
-          const isCurrent = i === currentMonth && selectedYear === currentYear;
-          const btn = document.createElement("button");
-          btn.className =
-            "month-btn " +
-            (!d.hasData
-              ? "no-data"
-              : d.profit >= 0
-                ? "profit-month"
-                : "loss-month") +
-            (isCurrent ? " current-month" : "");
-          btn.innerHTML = `
+    // Month grid
+    const grid = document.getElementById('month-grid');
+    grid.innerHTML = '';
+    data.forEach((d, i) => {
+      const isCurrent = (i === currentMonth && selectedYear === currentYear);
+      const btn = document.createElement('button');
+      btn.className = 'month-btn ' +
+        (!d.hasData ? 'no-data' : d.profit >= 0 ? 'profit-month' : 'loss-month') +
+        (isCurrent ? ' current-month' : '');
+      btn.innerHTML = `
         <span class="month-name">${d.month.short}</span>
         <span class="month-name-es">${d.month.es}</span>
         <div class="month-indicator"></div>
       `;
-          btn.onclick = () => showMonthDetail(d, i, btn);
-          grid.appendChild(btn);
-        });
+      btn.onclick = () => showMonthDetail(d, i, btn);
+      grid.appendChild(btn);
+    });
 
-        // Auto show current month if has data
-        if (dataMonths.length > 0 && selectedYear === currentYear) {
-          const currentData = data[currentMonth];
-          if (currentData && currentData.hasData) {
-            const btns = grid.querySelectorAll(".month-btn");
-            showMonthDetail(currentData, currentMonth, btns[currentMonth]);
-          }
-        }
+    // Auto show current month if has data
+    if (dataMonths.length > 0 && selectedYear === currentYear) {
+      const currentData = data[currentMonth];
+      if (currentData && currentData.hasData) {
+        const btns = grid.querySelectorAll('.month-btn');
+        showMonthDetail(currentData, currentMonth, btns[currentMonth]);
       }
+    }
+  }
 
-      // ── SHOW MONTH DETAIL ──
-      function showMonthDetail(d, index, btn) {
-        // Deselect all
-        document
-          .querySelectorAll(".month-btn")
-          .forEach((b) => b.classList.remove("selected"));
-        btn.classList.add("selected");
+  // ── SHOW MONTH DETAIL ──
+  function showMonthDetail(d, index, btn) {
+    // Deselect all
+    document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
 
-        const panel = document.getElementById("month-detail");
-        document.getElementById("detail-month-name").textContent =
-          `${d.month.en} · ${d.month.es}`;
+    const panel = document.getElementById('month-detail');
+    document.getElementById('detail-month-name').textContent =
+      `${d.month.en} · ${d.month.es}`;
 
-        const statusEl = document.getElementById("detail-status");
-        if (!d.hasData) {
-          statusEl.textContent = "No Data · Sin Datos";
-          statusEl.className = "detail-status";
-          statusEl.style.background = "rgba(74,85,104,0.2)";
-          statusEl.style.color = "var(--text3)";
-        } else if (d.profit >= 0) {
-          statusEl.textContent = "✅ Profit · Ganancia";
-          statusEl.className = "detail-status profit";
-          statusEl.style.background = "";
-          statusEl.style.color = "";
-        } else {
-          statusEl.textContent = "❌ Loss · Pérdida";
-          statusEl.className = "detail-status loss";
-          statusEl.style.background = "";
-          statusEl.style.color = "";
-        }
+    const statusEl = document.getElementById('detail-status');
+    if (!d.hasData) {
+      statusEl.textContent = 'No Data · Sin Datos';
+      statusEl.className = 'detail-status';
+      statusEl.style.background = 'rgba(74,85,104,0.2)';
+      statusEl.style.color = 'var(--text3)';
+    } else if (d.profit >= 0) {
+      statusEl.textContent = '✅ Profit · Ganancia';
+      statusEl.className = 'detail-status profit';
+      statusEl.style.background = '';
+      statusEl.style.color = '';
+    } else {
+      statusEl.textContent = '❌ Loss · Pérdida';
+      statusEl.className = 'detail-status loss';
+      statusEl.style.background = '';
+      statusEl.style.color = '';
+    }
 
-        document.getElementById("detail-revenue").textContent = fmt(d.revenue);
-        document.getElementById("detail-expenses").textContent = fmt(
-          d.expenses,
-        );
-        document.getElementById("detail-profit").textContent = fmt(d.profit);
+    document.getElementById('detail-revenue').textContent  = fmt(d.revenue);
+    document.getElementById('detail-expenses').textContent = fmt(d.expenses);
+    document.getElementById('detail-profit').textContent   = fmt(d.profit);
 
-        // Profit color
-        const profitEl = document.getElementById("detail-profit");
-        profitEl.style.color =
-          d.profit >= 0 ? "var(--accent)" : "var(--danger)";
+    // Profit color
+    const profitEl = document.getElementById('detail-profit');
+    profitEl.style.color = d.profit >= 0 ? 'var(--accent)' : 'var(--danger)';
 
-        // Progress bar
-        const pct =
-          d.revenue > 0 ? Math.min((d.expenses / d.revenue) * 100, 100) : 0;
-        document.getElementById("detail-bar-fill").style.width = pct + "%";
-        document.getElementById("detail-bar-pct").textContent =
-          `${pct.toFixed(0)}% of revenue · del ingreso`;
+    // Progress bar
+    const pct = d.revenue > 0 ? Math.min((d.expenses / d.revenue) * 100, 100) : 0;
+    document.getElementById('detail-bar-fill').style.width = pct + '%';
+    document.getElementById('detail-bar-pct').textContent =
+      `${pct.toFixed(0)}% of revenue · del ingreso`;
 
-        panel.classList.add("visible");
-        panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
+    panel.classList.add('visible');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 
-      // ── FORMAT CURRENCY ──
-      function fmt(val) {
-        const abs = Math.abs(val);
-        const formatted =
-          "$" +
-          abs.toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          });
-        return val < 0 ? "-" + formatted : formatted;
-      }
+  // ── FORMAT CURRENCY ──
+  function fmt(val) {
+    const abs = Math.abs(val);
+    const formatted = '$' + abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return val < 0 ? '-' + formatted : formatted;
+  }
 
-      // ── SET CURRENT YEAR IN DROPDOWN ──
-      document.getElementById("year-select").value = currentYear.toString();
-    </script>
-  </body>
+  // ── SET CURRENT YEAR IN DROPDOWN ──
+  document.getElementById('year-select').value = currentYear.toString();
+</script>
+</body>
 </html>
