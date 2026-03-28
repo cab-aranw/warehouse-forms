@@ -815,9 +815,10 @@
     document.getElementById('month-detail').classList.remove('visible');
 
     try {
-      const res  = await fetch(PROXY_URL);
+      const res = await fetch(`${PROXY_URL}?year=${year}`);
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
       const rows = await res.json();
+      console.log('RAW DATA:', rows);
       if (!Array.isArray(rows) || rows.length === 0) throw new Error('No data returned from proxy');
       sheetData = parseSheetData(rows, year);
       renderDashboard(sheetData, year);
@@ -845,11 +846,11 @@
     return MONTHS.map((m, i) => {
       // Find matching row by month name
       const row = rows.find(r =>
-        r.Month && r.Month.toLowerCase().includes(m.en.toLowerCase())
+        r.Month && r.Month.startsWith(m.en)
       );
       const revenue  = row ? (parseFloat(row['Total Revenue'])  || 0) : 0;
       const expenses = row ? (parseFloat(row['Total Expenses']) || 0) : 0;
-      const profit   = row ? (parseFloat(row['Net Profit'])     || 0) : 0;
+      const profit   = row ? Number(parseFloat(row['Net Profit']).toFixed(2)) : 0;
       return {
         month: m,
         revenue,
