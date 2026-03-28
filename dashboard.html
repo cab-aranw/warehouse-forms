@@ -815,38 +815,25 @@
     document.getElementById('month-detail').classList.remove('visible');
 
     try {
-      const res  = await fetch(`${PROXY_URL}?year=${year}`);
-      const json = await res.json();
-
-      // Handle both array and object responses
-      let rows = [];
-      if (Array.isArray(json)) {
-        rows = json; // Google Sheets node returns array directly
-      } else if (json.values) {
-        rows = json.values; // Raw Sheets API returns {values: [...]}
-      } else if (json[0]) {
-        rows = json; // Already an array
-      }
-
-      if (!rows.length) throw new Error('No data found in sheet');
-
+      const res  = await fetch(PROXY_URL);
+      if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+      const rows = await res.json();
+      if (!Array.isArray(rows) || rows.length === 0) throw new Error('No data returned from proxy');
       sheetData = parseSheetData(rows, year);
       renderDashboard(sheetData, year);
-
       document.getElementById('loading').style.display = 'none';
       document.getElementById('content').style.display = 'block';
-
     } catch (err) {
       document.getElementById('loading').innerHTML = `
         <div style="text-align:center;padding:20px;">
           <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
           <div style="color:#ff4d6d;font-family:var(--mono);font-size:12px;margin-bottom:8px;">
-            Error loading data
+            Error loading data · Error cargando datos
           </div>
-          <div style="color:#4a5568;font-size:11px;font-family:var(--mono);">
+          <div style="color:#4a5568;font-size:11px;font-family:var(--mono);margin-bottom:16px;">
             ${err.message}
           </div>
-          <button onclick="loadData()" style="margin-top:16px;padding:8px 20px;background:var(--primary);border:none;border-radius:8px;color:#fff;font-family:var(--mono);cursor:pointer;">
+          <button onclick="loadData()" style="padding:8px 20px;background:var(--primary);border:none;border-radius:8px;color:#fff;font-family:var(--mono);cursor:pointer;">
             Retry · Reintentar
           </button>
         </div>`;
@@ -856,21 +843,13 @@
   // ── PARSE SHEET DATA ──
   function parseSheetData(rows, year) {
     return MONTHS.map((m, i) => {
-      // Handle both array format and object format
-      let revenue = 0, expenses = 0, profit = 0;
-
-      if (Array.isArray(rows)) {
-        // Google Sheets node returns array of objects
-        const row = rows.find(r =>
-          r.Month && r.Month.toLowerCase().includes(m.en.toLowerCase())
-        );
-        if (row) {
-          revenue  = parseFloat(row['Total Revenue']  || 0) || 0;
-          expenses = parseFloat(row['Total Expenses'] || 0) || 0;
-          profit   = parseFloat(row['Net Profit']     || 0) || (revenue - expenses);
-        }
-      }
-
+      // Find matching row by month name
+      const row = rows.find(r =>
+        r.Month && r.Month.toLowerCase().includes(m.en.toLowerCase())
+      );
+      const revenue  = row ? (parseFloat(row['Total Revenue'])  || 0) : 0;
+      const expenses = row ? (parseFloat(row['Total Expenses']) || 0) : 0;
+      const profit   = row ? (parseFloat(row['Net Profit'])     || 0) : 0;
       return {
         month: m,
         revenue,
