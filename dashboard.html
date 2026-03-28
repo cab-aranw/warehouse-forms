@@ -411,25 +411,27 @@
 
   .month-btn:active { transform: scale(0.96); }
 
-  .month-btn.profit-month {
-  border-color: rgba(0,229,176,0.4);
-  background: rgba(0,229,176,0.08);
+  .month-btn.profit-month,
+.month-btn.profit-month.selected,
+.month-btn.profit-month.current-month {
+  border-color: rgba(0,229,176,0.5);
+  background: rgba(0,229,176,0.10);
 }
 
-  .month-btn.loss-month {
-    border-color: rgba(255,77,109,0.3);
-    background: rgba(255,77,109,0.05);
-  }
+  .month-btn.loss-month,
+.month-btn.loss-month.selected,
+.month-btn.loss-month.current-month {
+  border-color: rgba(255,77,109,0.4);
+  background: rgba(255,77,109,0.08);
+}
 
   .month-btn.current-month {
   box-shadow: 0 0 20px rgba(124,92,252,0.4);
 }
 
   .month-btn.selected {
-    border-color: var(--primary);
-    background: var(--primary-glow);
-    transform: scale(1.02);
-  }
+  transform: scale(1.02);
+}
 
   .month-btn.no-data {
     opacity: 0.4;
