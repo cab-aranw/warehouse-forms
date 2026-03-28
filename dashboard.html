@@ -412,9 +412,9 @@
   .month-btn:active { transform: scale(0.96); }
 
   .month-btn.profit-month {
-    border-color: rgba(0,229,176,0.3);
-    background: rgba(0,229,176,0.05);
-  }
+  border-color: rgba(0,229,176,0.4);
+  background: rgba(0,229,176,0.08);
+}
 
   .month-btn.loss-month {
     border-color: rgba(255,77,109,0.3);
@@ -422,10 +422,8 @@
   }
 
   .month-btn.current-month {
-    border-color: var(--primary);
-    background: var(--primary-glow);
-    box-shadow: 0 0 20px rgba(124,92,252,0.2);
-  }
+  box-shadow: 0 0 20px rgba(124,92,252,0.4);
+}
 
   .month-btn.selected {
     border-color: var(--primary);
@@ -941,9 +939,12 @@
     data.forEach((d, i) => {
       const isCurrent = (i === currentMonth && selectedYear === currentYear);
       const btn = document.createElement('button');
-      btn.className = 'month-btn ' +
-        (!d.hasData ? 'no-data' : d.profit >= 0 ? 'profit-month' : 'loss-month') +
-        (isCurrent ? ' current-month' : '');
+      let statusClass = 'no-data';
+      if (d.hasData) {
+        statusClass = d.profit >= 0 ? 'profit-month' : 'loss-month';
+      }
+      let currentClass = isCurrent ? ' current-month' : '';
+      btn.className = `month-btn ${statusClass}${currentClass}`;
       btn.innerHTML = `
         <span class="month-name">${d.month.short}</span>
         <span class="month-name-es">${d.month.es}</span>
