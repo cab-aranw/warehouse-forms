@@ -781,6 +781,7 @@
   ];
 
   let sheetData = [];
+  let isLoading = false;
   const currentMonth = new Date().getMonth(); // 0-indexed
   const currentYear  = new Date().getFullYear();
 
@@ -808,38 +809,65 @@
   }
 
   // ── LOAD DATA FROM RAILWAY PROXY ──
-  async function loadData() {
+  
+  async function loadData(retry = 0) {
+    if (isLoading) return;
+    isLoading = true;
+
     const year = document.getElementById('year-select').value;
-    document.getElementById('loading').style.display = 'flex';
+    const loadingEl = document.getElementById('loading');
+
+    // Reset loading UI
+    loadingEl.innerHTML = `
+      <div class="spinner"></div>
+      <div class="loading-text">LOADING DATA · CARGANDO DATOS</div>
+    `;
+    loadingEl.style.display = 'flex';
     document.getElementById('content').style.display = 'none';
     document.getElementById('month-detail').classList.remove('visible');
 
     try {
       const res = await fetch(`${PROXY_URL}?year=${year}`);
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+
       const rows = await res.json();
-      console.log('RAW DATA:', rows);
-      if (!Array.isArray(rows) || rows.length === 0) throw new Error('No data returned from proxy');
-      sheetData = parseSheetData(rows, year);
-      renderDashboard(sheetData, year);
-      document.getElementById('loading').style.display = 'none';
+      console.log("RAW DATA:", rows);
+
+      if (!Array.isArray(rows) || rows.length === 0) {
+        // No data → clear dashboard instead of fallback
+        sheetData = [];
+        renderEmptyState(year);
+      } else {
+        sheetData = parseSheetData(rows, year);
+        renderDashboard(sheetData, year);
+      }
+
+      loadingEl.style.display = 'none';
       document.getElementById('content').style.display = 'block';
+
     } catch (err) {
-      document.getElementById('loading').innerHTML = `
-        <div style="text-align:center;padding:20px;">
-          <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
-          <div style="color:#ff4d6d;font-family:var(--mono);font-size:12px;margin-bottom:8px;">
-            Error loading data · Error cargando datos
-          </div>
-          <div style="color:#4a5568;font-size:11px;font-family:var(--mono);margin-bottom:16px;">
-            ${err.message}
-          </div>
-          <button onclick="loadData()" style="padding:8px 20px;background:var(--primary);border:none;border-radius:8px;color:#fff;font-family:var(--mono);cursor:pointer;">
-            Retry · Reintentar
-          </button>
-        </div>`;
+      console.error("FETCH ERROR:", err);
+
+      // Silent retry (max 2 attempts)
+      if (retry < 2) {
+        setTimeout(() => loadData(retry + 1), 800);
+      } else {
+        loadingEl.innerHTML = `
+          <div style="text-align:center;padding:20px;">
+            <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
+            <div style="color:#ff4d6d;font-family:var(--mono);font-size:12px;margin-bottom:8px;">
+              Error loading data · Error cargando datos
+            </div>
+            <button onclick="loadData()" style="padding:8px 20px;background:var(--primary);border:none;border-radius:8px;color:#fff;font-family:var(--mono);cursor:pointer;">
+              Retry · Reintentar
+            </button>
+          </div>`;
+      }
+    } finally {
+      isLoading = false;
     }
   }
+
 
   // ── PARSE SHEET DATA ──
   function parseSheetData(rows, year) {
@@ -859,6 +887,22 @@
         hasData: revenue > 0 || expenses > 0
       };
     });
+  }
+
+  
+  function renderEmptyState(year) {
+    document.getElementById('annual-revenue').textContent  = '$0.00';
+    document.getElementById('annual-expenses').textContent = '$0.00';
+    document.getElementById('annual-profit').textContent   = '$0.00';
+    document.getElementById('annual-margin').textContent   = '0%';
+
+    document.getElementById('best-month').textContent = '—';
+    document.getElementById('best-amount').textContent = '$0';
+    document.getElementById('worst-month').textContent = '—';
+    document.getElementById('worst-amount').textContent = '$0';
+
+    document.getElementById('month-grid').innerHTML = '';
+    document.getElementById('month-detail').classList.remove('visible');
   }
 
   // ── RENDER DASHBOARD ──
@@ -973,7 +1017,7 @@
   }
 
   // ── SET CURRENT YEAR IN DROPDOWN ──
-  document.getElementById('year-select').value = currentYear.toString();
+  // Removed auto-reset of year to preserve user selection
 </script>
 </body>
 </html>
