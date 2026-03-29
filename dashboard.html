@@ -850,7 +850,16 @@
     document.getElementById('month-detail').classList.remove('visible');
 
     try {
-      const res = await fetch(`${PROXY_URL}?year=${year}`);
+      const token = localStorage.getItem('authToken');
+
+const res = await fetch(PROXY_URL, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`
+  },
+  body: JSON.stringify({ year })
+});
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
 
       const rows = await res.json();
