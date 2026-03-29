@@ -786,20 +786,43 @@
   const currentYear  = new Date().getFullYear();
 
   // ── PASSWORD ──
-  function checkPassword() {
-    const input = document.getElementById('pwd-input').value;
-    const error = document.getElementById('lock-error');
-    if (input === PASSWORD) {
+  async function checkPassword() {
+  const input = document.getElementById('pwd-input').value;
+  const error = document.getElementById('lock-error');
+
+  try {
+    const res = await fetch('https://n8n-production-e569.up.railway.app/webhook/auth-login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ password: input })
+    });
+
+    const data = await res.json();
+
+    console.log("LOGIN RESPONSE:", data);
+
+    if (data.token) {
+      // ✅ Save token
+      localStorage.setItem('authToken', data.token);
+
+      // ✅ Unlock UI
       document.getElementById('lock-screen').style.display = 'none';
       document.getElementById('dashboard').style.display = 'block';
+
       loadData();
     } else {
-      error.style.display = 'block';
-      error.style.animation = 'none';
-      setTimeout(() => error.style.animation = 'shake 0.3s ease', 10);
-      document.getElementById('pwd-input').value = '';
+      throw new Error("Invalid credentials");
     }
+
+  } catch (err) {
+    console.error(err);
+
+    error.style.display = 'block';
+    document.getElementById('pwd-input').value = '';
   }
+}
 
   function logout() {
     document.getElementById('lock-screen').style.display = 'flex';
