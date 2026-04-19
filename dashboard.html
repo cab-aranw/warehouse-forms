@@ -411,27 +411,27 @@
 
   .month-btn:active { transform: scale(0.96); }
 
-  .month-btn.profit-month,
-.month-btn.profit-month.selected,
-.month-btn.profit-month.current-month {
-  border-color: rgba(0,229,176,0.5);
-  background: rgba(0,229,176,0.10);
-}
+  .month-btn.profit-month {
+    border-color: rgba(0,229,176,0.3);
+    background: rgba(0,229,176,0.05);
+  }
 
-  .month-btn.loss-month,
-.month-btn.loss-month.selected,
-.month-btn.loss-month.current-month {
-  border-color: rgba(255,77,109,0.4);
-  background: rgba(255,77,109,0.08);
-}
+  .month-btn.loss-month {
+    border-color: rgba(255,77,109,0.3);
+    background: rgba(255,77,109,0.05);
+  }
 
   .month-btn.current-month {
-  box-shadow: 0 0 20px rgba(124,92,252,0.4);
-}
+    border-color: var(--primary);
+    background: var(--primary-glow);
+    box-shadow: 0 0 20px rgba(124,92,252,0.2);
+  }
 
   .month-btn.selected {
-  transform: scale(1.02);
-}
+    border-color: var(--primary);
+    background: var(--primary-glow);
+    transform: scale(1.02);
+  }
 
   .month-btn.no-data {
     opacity: 0.4;
@@ -762,8 +762,9 @@
 
 <script>
   // ── CONFIG ──
-  const PROXY_URL = 'https://n8n-production-e569.up.railway.app/webhook/sheets-data';
-  const PASSWORD  = 'C0m0HasCambiadoPelon4#846';
+  // ✅ PROXY_URL is safe to be public — it's just a URL, not a secret
+  // ✅ NO password stored here — password lives in n8n Cloud only
+  const PROXY_URL = 'https://huerequeque.app.n8n.cloud/webhook/sheets-data';
 
   const MONTHS = [
     { en: 'January',   es: 'Enero',      short: 'JAN' },
@@ -780,168 +781,133 @@
     { en: 'December',  es: 'Diciembre',  short: 'DIC' }
   ];
 
-  let sheetData = [];
-  let isLoading = false;
-  const currentMonth = new Date().getMonth(); // 0-indexed
+  let sheetData  = [];
+  let savedPwd   = ''; // ✅ Password stored in memory only — never in code
+  const currentMonth = new Date().getMonth();
   const currentYear  = new Date().getFullYear();
 
-  // ── PASSWORD ──
+  // ── PASSWORD CHECK ──
+  // ✅ Sends password to n8n Cloud for validation
+  // ✅ n8n returns data if correct, 401 if wrong
+  // ✅ Password never stored in this file
   async function checkPassword() {
-  const input = document.getElementById('pwd-input').value;
-  const error = document.getElementById('lock-error');
+    const input = document.getElementById('pwd-input').value.trim();
+    const error = document.getElementById('lock-error');
+    const btn   = document.querySelector('.lock-btn');
 
-  try {
-    const res = await fetch('https://n8n-production-e569.up.railway.app/webhook/auth-login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ password: input })
-    });
+    if (!input) return;
 
-    const data = await res.json();
+    // Show loading state on button
+    btn.textContent = 'Verifying... · Verificando...';
+    btn.disabled = true;
+    error.style.display = 'none';
 
-    console.log("LOGIN RESPONSE:", data);
+    try {
+      // Send password to n8n — n8n checks it, not the browser
+      const res = await fetch(`${PROXY_URL}?pwd=${encodeURIComponent(input)}`);
 
-    if (data.token) {
-      // ✅ Save token
-      localStorage.setItem('authToken', data.token);
+      if (res.status === 401) {
+        // ❌ Wrong password — n8n rejected it
+        throw new Error('Unauthorized');
+      }
 
-      // ✅ Unlock UI
+      if (!res.ok) {
+        throw new Error(`HTTP error: ${res.status}`);
+      }
+
+      const rows = await res.json();
+
+      // ✅ Correct password — save in memory and show dashboard
+      savedPwd = input;
       document.getElementById('lock-screen').style.display = 'none';
       document.getElementById('dashboard').style.display = 'block';
+      document.getElementById('year-select').value = currentYear.toString();
 
-      loadData();
-    } else {
-      throw new Error("Invalid credentials");
+      // Render with already fetched data
+      sheetData = parseSheetData(rows, currentYear);
+      renderDashboard(sheetData, currentYear.toString());
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+
+    } catch (err) {
+      // ❌ Wrong password or error — show error message
+      error.style.display = 'block';
+      error.style.animation = 'none';
+      setTimeout(() => error.style.animation = 'shake 0.3s ease', 10);
+      document.getElementById('pwd-input').value = '';
+    } finally {
+      btn.textContent = 'Access Dashboard · Acceder';
+      btn.disabled = false;
     }
-
-  } catch (err) {
-    console.error(err);
-
-    error.style.display = 'block';
-    document.getElementById('pwd-input').value = '';
   }
-}
 
+  // ── LOGOUT ──
+  // ✅ Clears password from memory
   function logout() {
+    savedPwd = '';
     document.getElementById('lock-screen').style.display = 'flex';
     document.getElementById('dashboard').style.display = 'none';
     document.getElementById('pwd-input').value = '';
     document.getElementById('lock-error').style.display = 'none';
-  }
-
-  // ── LOAD DATA FROM RAILWAY PROXY ──
-  
-  async function loadData(retry = 0) {
-    if (isLoading) return;
-    isLoading = true;
-
-    const year = document.getElementById('year-select').value;
-    const loadingEl = document.getElementById('loading');
-
-    // Reset loading UI
-    loadingEl.innerHTML = `
+    document.getElementById('content').style.display = 'none';
+    document.getElementById('loading').style.display = 'flex';
+    document.getElementById('loading').innerHTML = `
       <div class="spinner"></div>
       <div class="loading-text">LOADING DATA · CARGANDO DATOS</div>
     `;
-    loadingEl.style.display = 'flex';
+  }
+
+  // ── LOAD DATA ──
+  // ✅ Uses password saved in memory (savedPwd)
+  // ✅ Called when year dropdown changes
+  async function loadData() {
+    const year = document.getElementById('year-select').value;
+    document.getElementById('loading').style.display = 'flex';
+    document.getElementById('loading').innerHTML = `
+      <div class="spinner"></div>
+      <div class="loading-text">LOADING DATA · CARGANDO DATOS</div>
+    `;
     document.getElementById('content').style.display = 'none';
     document.getElementById('month-detail').classList.remove('visible');
 
     try {
-      const token = localStorage.getItem('authToken');
-
-const res = await fetch(PROXY_URL, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`
-  },
-  body: JSON.stringify({ year })
-});
+      const res = await fetch(`${PROXY_URL}?pwd=${encodeURIComponent(savedPwd)}`);
+      if (res.status === 401) throw new Error('Session expired — please log in again');
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
-
       const rows = await res.json();
-      console.log("RAW DATA:", rows);
-
-      if (!Array.isArray(rows) || rows.length === 0) {
-        // No data → clear dashboard instead of fallback
-        sheetData = [];
-        renderEmptyState(year);
-      } else {
-        sheetData = parseSheetData(rows, year);
-        renderDashboard(sheetData, year);
-      }
-
-      loadingEl.style.display = 'none';
+      if (!Array.isArray(rows) || rows.length === 0) throw new Error('No data returned');
+      sheetData = parseSheetData(rows, year);
+      renderDashboard(sheetData, year);
+      document.getElementById('loading').style.display = 'none';
       document.getElementById('content').style.display = 'block';
-
     } catch (err) {
-      console.error("FETCH ERROR:", err);
-
-      // Silent retry (max 2 attempts)
-      if (retry < 2) {
-        setTimeout(() => loadData(retry + 1), 800);
-      } else {
-        loadingEl.innerHTML = `
-          <div style="text-align:center;padding:20px;">
-            <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
-            <div style="color:#ff4d6d;font-family:var(--mono);font-size:12px;margin-bottom:8px;">
-              Error loading data · Error cargando datos
-            </div>
-            <button onclick="loadData()" style="padding:8px 20px;background:var(--primary);border:none;border-radius:8px;color:#fff;font-family:var(--mono);cursor:pointer;">
-              Retry · Reintentar
-            </button>
-          </div>`;
-      }
-    } finally {
-      isLoading = false;
+      document.getElementById('loading').innerHTML = `
+        <div style="text-align:center;padding:20px;">
+          <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
+          <div style="color:#ff4d6d;font-family:var(--mono);font-size:12px;margin-bottom:8px;">
+            ${err.message}
+          </div>
+          <button onclick="loadData()" style="padding:8px 20px;background:var(--primary);border:none;border-radius:8px;color:#fff;font-family:var(--mono);cursor:pointer;margin-top:12px;">
+            Retry · Reintentar
+          </button>
+        </div>`;
     }
   }
 
-
   // ── PARSE SHEET DATA ──
   function parseSheetData(rows, year) {
-    return MONTHS.map((m, i) => {
-      // Find matching row by month name
-      const row = rows.find(r =>
-        r.Month && r.Month.startsWith(m.en)
-      );
+    return MONTHS.map((m) => {
+      const row      = rows.find(r => r.Month && r.Month.toLowerCase().includes(m.en.toLowerCase()));
       const revenue  = row ? (parseFloat(row['Total Revenue'])  || 0) : 0;
       const expenses = row ? (parseFloat(row['Total Expenses']) || 0) : 0;
-      const profit   = row ? Number(parseFloat(row['Net Profit']).toFixed(2)) : 0;
-      return {
-        month: m,
-        revenue,
-        expenses,
-        profit,
-        hasData: revenue > 0 || expenses > 0
-      };
+      const profit   = row ? (parseFloat(row['Net Profit'])     || 0) : 0;
+      return { month: m, revenue, expenses, profit, hasData: revenue > 0 || expenses > 0 };
     });
-  }
-
-  
-  function renderEmptyState(year) {
-    document.getElementById('annual-revenue').textContent  = '$0.00';
-    document.getElementById('annual-expenses').textContent = '$0.00';
-    document.getElementById('annual-profit').textContent   = '$0.00';
-    document.getElementById('annual-margin').textContent   = '0%';
-
-    document.getElementById('best-month').textContent = '—';
-    document.getElementById('best-amount').textContent = '$0';
-    document.getElementById('worst-month').textContent = '—';
-    document.getElementById('worst-amount').textContent = '$0';
-
-    document.getElementById('month-grid').innerHTML = '';
-    document.getElementById('month-detail').classList.remove('visible');
   }
 
   // ── RENDER DASHBOARD ──
   function renderDashboard(data, year) {
-    const selectedYear = parseInt(year);
-
-    // Annual totals
+    const selectedYear  = parseInt(year);
     const totalRevenue  = data.reduce((s, d) => s + d.revenue, 0);
     const totalExpenses = data.reduce((s, d) => s + d.expenses, 0);
     const totalProfit   = totalRevenue - totalExpenses;
@@ -951,34 +917,26 @@ const res = await fetch(PROXY_URL, {
     document.getElementById('annual-expenses').textContent = fmt(totalExpenses);
     document.getElementById('annual-profit').textContent   = fmt(totalProfit);
     document.getElementById('annual-margin').textContent   = `${margin}%`;
+    document.getElementById('annual-profit').style.color   = totalProfit >= 0 ? 'var(--accent)' : 'var(--danger)';
 
-    // Color profit based on positive/negative
-    const profitEl = document.getElementById('annual-profit');
-    profitEl.style.color = totalProfit >= 0 ? 'var(--accent)' : 'var(--danger)';
-
-    // Best and worst months
     const dataMonths = data.filter(d => d.hasData);
     if (dataMonths.length > 0) {
       const best  = dataMonths.reduce((a, b) => b.profit > a.profit ? b : a);
       const worst = dataMonths.reduce((a, b) => b.profit < a.profit ? b : a);
-      document.getElementById('best-month').textContent  = best.month.en;
-      document.getElementById('best-amount').textContent = fmt(best.profit);
+      document.getElementById('best-month').textContent   = best.month.en;
+      document.getElementById('best-amount').textContent  = fmt(best.profit);
       document.getElementById('worst-month').textContent  = worst.month.en;
       document.getElementById('worst-amount').textContent = fmt(worst.profit);
     }
 
-    // Month grid
     const grid = document.getElementById('month-grid');
     grid.innerHTML = '';
     data.forEach((d, i) => {
       const isCurrent = (i === currentMonth && selectedYear === currentYear);
       const btn = document.createElement('button');
-      let statusClass = 'no-data';
-      if (d.hasData) {
-        statusClass = d.profit >= 0 ? 'profit-month' : 'loss-month';
-      }
-      let currentClass = isCurrent ? ' current-month' : '';
-      btn.className = `month-btn ${statusClass}${currentClass}`;
+      btn.className = 'month-btn ' +
+        (!d.hasData ? 'no-data' : d.profit >= 0 ? 'profit-month' : 'loss-month') +
+        (isCurrent ? ' current-month' : '');
       btn.innerHTML = `
         <span class="month-name">${d.month.short}</span>
         <span class="month-name-es">${d.month.es}</span>
@@ -988,7 +946,6 @@ const res = await fetch(PROXY_URL, {
       grid.appendChild(btn);
     });
 
-    // Auto show current month if has data
     if (dataMonths.length > 0 && selectedYear === currentYear) {
       const currentData = data[currentMonth];
       if (currentData && currentData.hasData) {
@@ -1000,45 +957,39 @@ const res = await fetch(PROXY_URL, {
 
   // ── SHOW MONTH DETAIL ──
   function showMonthDetail(d, index, btn) {
-    // Deselect all
     document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
 
-    const panel = document.getElementById('month-detail');
-    document.getElementById('detail-month-name').textContent =
-      `${d.month.en} · ${d.month.es}`;
-
+    const panel    = document.getElementById('month-detail');
     const statusEl = document.getElementById('detail-status');
+
+    document.getElementById('detail-month-name').textContent = `${d.month.en} · ${d.month.es}`;
+
     if (!d.hasData) {
-      statusEl.textContent = 'No Data · Sin Datos';
-      statusEl.className = 'detail-status';
+      statusEl.textContent      = 'No Data · Sin Datos';
+      statusEl.className        = 'detail-status';
       statusEl.style.background = 'rgba(74,85,104,0.2)';
-      statusEl.style.color = 'var(--text3)';
+      statusEl.style.color      = 'var(--text3)';
     } else if (d.profit >= 0) {
-      statusEl.textContent = '✅ Profit · Ganancia';
-      statusEl.className = 'detail-status profit';
+      statusEl.textContent      = '✅ Profit · Ganancia';
+      statusEl.className        = 'detail-status profit';
       statusEl.style.background = '';
-      statusEl.style.color = '';
+      statusEl.style.color      = '';
     } else {
-      statusEl.textContent = '❌ Loss · Pérdida';
-      statusEl.className = 'detail-status loss';
+      statusEl.textContent      = '❌ Loss · Pérdida';
+      statusEl.className        = 'detail-status loss';
       statusEl.style.background = '';
-      statusEl.style.color = '';
+      statusEl.style.color      = '';
     }
 
     document.getElementById('detail-revenue').textContent  = fmt(d.revenue);
     document.getElementById('detail-expenses').textContent = fmt(d.expenses);
     document.getElementById('detail-profit').textContent   = fmt(d.profit);
+    document.getElementById('detail-profit').style.color   = d.profit >= 0 ? 'var(--accent)' : 'var(--danger)';
 
-    // Profit color
-    const profitEl = document.getElementById('detail-profit');
-    profitEl.style.color = d.profit >= 0 ? 'var(--accent)' : 'var(--danger)';
-
-    // Progress bar
     const pct = d.revenue > 0 ? Math.min((d.expenses / d.revenue) * 100, 100) : 0;
-    document.getElementById('detail-bar-fill').style.width = pct + '%';
-    document.getElementById('detail-bar-pct').textContent =
-      `${pct.toFixed(0)}% of revenue · del ingreso`;
+    document.getElementById('detail-bar-fill').style.width    = pct + '%';
+    document.getElementById('detail-bar-pct').textContent     = `${pct.toFixed(0)}% of revenue · del ingreso`;
 
     panel.classList.add('visible');
     panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1046,13 +997,10 @@ const res = await fetch(PROXY_URL, {
 
   // ── FORMAT CURRENCY ──
   function fmt(val) {
-    const abs = Math.abs(val);
+    const abs       = Math.abs(val);
     const formatted = '$' + abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     return val < 0 ? '-' + formatted : formatted;
   }
-
-  // ── SET CURRENT YEAR IN DROPDOWN ──
-  // Removed auto-reset of year to preserve user selection
 </script>
 </body>
 </html>
